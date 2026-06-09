@@ -59,7 +59,6 @@ namespace NestingApp
 
             foreach (var ptr in partsDataPointers) Marshal.FreeHGlobal(ptr);
 
-            // Создаем выходной документ по правилам netDxf 2.2.0
             DxfDocument outDoc = new DxfDocument();
             
             // Отрисовка границ физического листа
