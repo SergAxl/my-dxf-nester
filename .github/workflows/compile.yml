@@ -28,19 +28,14 @@ jobs:
     - name: Build C++ DLL
       run: cl.exe /LD NestingCore.cpp /Fe:NestingEngine.dll
 
-    - name: Restore C# dependencies
-      run: dotnet restore NestingApp.csproj
+    - name: Publish C# App
+      run: dotnet publish NestingApp.csproj -c Release -o ./ReadyApp
 
-    - name: Build C# Project (Release)
-      run: dotnet build NestingApp.csproj -c Release --no-restore
-
-    - name: Move DLL to Output Folder
-      run: |
-        New-Item -ItemType Directory -Force -Path bin\Release\net8.0
-        Copy-Item -Path NestingEngine.dll -Destination bin\Release\net8.0\
+    - name: Add DLL to App Folder
+      run: Copy-Item -Path NestingEngine.dll -Destination ./ReadyApp/
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: MyNestingProgram
-        path: bin/Release/net8.0/
+        path: ./ReadyApp/
