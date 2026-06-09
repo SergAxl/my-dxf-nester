@@ -116,21 +116,18 @@ namespace NestingApp
 
                     currentPolylines.Clear();
 
-                    // 1. Сбор готовых полилиний
-                    if (doc.Entities.Polylines2D != null) currentPolylines.AddRange(doc.Entities.Polylines2D);
-                    if (doc.Entities.LwPolylines != null)
+                    // 1. В новых версиях netDxf LwPolyline объединен с Polyline2D. 
+                    // Все полилинии теперь забираются одним блоком:
+                    if (doc.Entities.Polylines2D != null)
                     {
-                        foreach (var lw in doc.Entities.LwPolylines)
-                        {
-                            var v = lw.Vertexes.Select(pt => new Polyline2DVertex(pt.Position.X, pt.Position.Y)).ToList();
-                            currentPolylines.Add(new Polyline2D(v) { IsClosed = lw.IsClosed });
-                        }
+                        currentPolylines.AddRange(doc.Entities.Polylines2D);
                     }
 
                     // 2. АВТОМАТИЧЕСКАЯ СШИВКА ОТРЕЗКОВ (LINE) В ПОЛИЛИНИИ
-                    if (doc.Entities.Lines != null && doc.Entities.Lines.Count > 0)
+                    var lines = doc.Entities.Lines;
+                    if (lines != null && lines.Any())
                     {
-                        var segments = doc.Entities.Lines.Select(l => new Tuple<Vector2, Vector2>(
+                        var segments = lines.Select(l => new Tuple<Vector2, Vector2>(
                             new Vector2(l.StartPoint.X, l.StartPoint.Y), 
                             new Vector2(l.EndPoint.X, l.EndPoint.Y))).ToList();
 
@@ -174,14 +171,12 @@ namespace NestingApp
                     for (int i = 0; i < segments.Count; i++)
                     {
                         var seg = segments[i];
-                        // Проверка стыковки с концом цепи
                         if (Vector2.Distance(currentChain.Last(), seg.Item1) < epsilon) {
                             currentChain.Add(seg.Item2); segments.RemoveAt(i); added = true; break;
                         }
                         if (Vector2.Distance(currentChain.Last(), seg.Item2) < epsilon) {
                             currentChain.Add(seg.Item1); segments.RemoveAt(i); added = true; break;
                         }
-                        // Проверка стыковки с началом цепи
                         if (Vector2.Distance(currentChain.First(), seg.Item1) < epsilon) {
                             currentChain.Insert(0, seg.Item2); segments.RemoveAt(i); added = true; break;
                         }
@@ -255,7 +250,6 @@ namespace NestingApp
             previewCanvas.Children.Clear();
             if (currentPolylines.Count == 0) return;
 
-            // Находим общие габариты всех деталей для правильного масштабирования на холсте
             double minX = currentPolylines.Min(p => p.Vertexes.Min(v => v.Position.X));
             double maxX = currentPolylines.Max(p => p.Vertexes.Max(v => v.Position.X));
             double minY = currentPolylines.Min(p => p.Vertexes.Min(v => v.Position.Y));
@@ -278,7 +272,6 @@ namespace NestingApp
                     double y = previewCanvas.ActualHeight - ((v.Position.Y - minY) * scale + 20);
                     visualPoly.Points.Add(new System.Windows.Point(x, y));
                 }
-                // Замыкаем линию на экране, если она замкнута в данных
                 if (poly.IsClosed && poly.Vertexes.Count > 0) {
                     var v = poly.Vertexes.First();
                     visualPoly.Points.Add(new System.Windows.Point((v.Position.X - minX) * scale + 20, previewCanvas.ActualHeight - ((v.Position.Y - minY) * scale + 20)));
