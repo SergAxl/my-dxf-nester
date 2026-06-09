@@ -18,8 +18,7 @@ jobs:
         dotnet restore
         dotnet build -c Release
     - name: Inject DLL
-      run: copy NestingEngine.dll bin\Release\net8.0\
-    - name: Upload Finished App
+      - name: Upload Finished App
       uses: actions/upload-artifact@v4
       with:
         name: MyNestingProgram
