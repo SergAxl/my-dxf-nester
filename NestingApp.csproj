@@ -8,4 +8,9 @@
   <ItemGroup>
     <PackageReference Include="netDxf" Version="2.2.0" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="NestingEngine.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
