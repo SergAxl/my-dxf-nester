@@ -111,7 +111,6 @@ namespace NestingApp
                 try
                 {
                     loadedFilePath = dlg.FileName;
-                    // Новый метод загрузки поддерживает AutoCAD 2018/2023 ASCII и Binary
                     DxfDocument doc = DxfDocument.Load(loadedFilePath);
                     
                     if (doc == null) {
@@ -120,7 +119,7 @@ namespace NestingApp
                     }
 
                     currentPolylines = doc.Entities.Polylines2D.ToList();
-                    lblStatus.Text = $"Файл: {Path.GetFileName(loadedFilePath)}\nНайдено контуров: {currentPolylines.Count}";
+                    lblStatus.Text = $"Файл: {System.IO.Path.GetFileName(loadedFilePath)}\nНайдено контуров: {currentPolylines.Count}";
                     
                     DrawPreview();
                 }
@@ -169,10 +168,10 @@ namespace NestingApp
                 Polyline2D nestedPoly = new Polyline2D(nestedVertices) { IsClosed = true };
                 resultDoc.Entities.Add(nestedPoly);
 
-                string outPath = Path.Combine(Path.GetDirectoryName(loadedFilePath)!, "Result_Layout.dxf");
+                string outPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(loadedFilePath)!, "Result_Layout.dxf");
                 resultDoc.Save(outPath);
 
-                lblStatus.Text = $"Раскрой выполнен успешно!\nСохранено в: {Path.GetFileName(outPath)}";
+                lblStatus.Text = $"Раскрой выполнен успешно!\nСохранено в: {System.IO.Path.GetFileName(outPath)}";
                 
                 DrawResultPreview(sW, sH, nestedVertices);
                 MessageBox.Show($"Файл раскроя успешно сгенерирован:\n{outPath}", "Успех ЧПУ", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -187,8 +186,8 @@ namespace NestingApp
             previewCanvas.Children.Clear();
             if (currentPolylines.Count == 0) return;
 
-            Polyline visualPoly = new Polyline { Stroke = Brushes.Cyan, StrokeThickness = 1.5 };
-            var points = currentPolylines.First().Vertexes.Select(v => new Point(v.Position.X + 80, -v.Position.Y + 250));
+            System.Windows.Shapes.Polyline visualPoly = new System.Windows.Shapes.Polyline { Stroke = Brushes.Cyan, StrokeThickness = 1.5 };
+            var points = currentPolylines.First().Vertexes.Select(v => new System.Windows.Point(v.Position.X + 80, -v.Position.Y + 250));
             foreach (var p in points) visualPoly.Points.Add(p);
             previewCanvas.Children.Add(visualPoly);
         }
@@ -202,9 +201,9 @@ namespace NestingApp
             Rectangle sheetRect = new Rectangle { Width = sw * scale, Height = sh * scale, Stroke = Brushes.DarkGray, StrokeThickness = 1, Margin = new Thickness(20) };
             previewCanvas.Children.Add(sheetRect);
 
-            Polyline partPoly = new Polyline { Stroke = Brushes.Lime, StrokeThickness = 1.5, Margin = new Thickness(20) };
+            System.Windows.Shapes.Polyline partPoly = new System.Windows.Shapes.Polyline { Stroke = Brushes.Lime, StrokeThickness = 1.5, Margin = new Thickness(20) };
             foreach (var v in nested) {
-                partPoly.Points.Add(new Point(v.Position.X * scale, (sh - v.Position.Y) * scale));
+                partPoly.Points.Add(new System.Windows.Point(v.Position.X * scale, (sh - v.Position.Y) * scale));
             }
             previewCanvas.Children.Add(partPoly);
         }
