@@ -67,7 +67,12 @@ namespace NestingApp
                 var res = results[i];
                 if (res.SheetNumber == 1) {
                     var clonedPoly = (LwPolyline)polylines[res.PartID].Clone();
-                    clonedPoly.TransformBy(Matrix3.Translation(new Vector3(res.OffsetX, res.OffsetY, 0)), Vector3.Zero);
+                    
+                    // Правильное смещение деталей для netDxf 2.2.0:
+                    // Используем единичную матрицу (без изменения размера/поворота) + вектор смещения
+                    Vector3 moveVector = new Vector3(res.OffsetX, res.OffsetY, 0);
+                    clonedPoly.TransformBy(Matrix3.Identity, moveVector);
+                    
                     outDoc.Entities.Add(clonedPoly);
                 }
             }
