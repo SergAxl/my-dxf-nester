@@ -59,21 +59,35 @@ namespace NestingApp
 
             foreach (var ptr in partsDataPointers) Marshal.FreeHGlobal(ptr);
 
+            // Создаем выходной документ по правилам netDxf 2.2.0
             DxfDocument outDoc = new DxfDocument();
-            outDoc.Entities.Add(new LwPolyline(new[] { new LwPolylineVertex(0, 0), new LwPolylineVertex(sheetLength, 0), new LwPolylineVertex(sheetLength, sheetWidth), new LwPolylineVertex(0, sheetWidth) }, true));
+            
+            // Отрисовка границ физического листа
+            var sheetFrame = new LwPolyline(new[] { 
+                new LwPolylineVertex(0, 0), 
+                new LwPolylineVertex(sheetLength, 0), 
+                new LwPolylineVertex(sheetLength, sheetWidth), 
+                new LwPolylineVertex(0, sheetWidth) 
+            }, true);
+            outDoc.AddEntity(sheetFrame);
 
+            // Перенос деталей на карту раскроя через генерацию новых вершин со смещением
             for (int i = 0; i < partCount; i++)
             {
                 var res = results[i];
                 if (res.SheetNumber == 1) {
-                    var clonedPoly = (LwPolyline)polylines[res.PartID].Clone();
+                    var originalPoly = polylines[res.PartID];
+                    var movedVertices = new List<LwPolylineVertex>();
                     
-                    // Правильное смещение деталей для netDxf 2.2.0:
-                    // Используем единичную матрицу (без изменения размера/поворота) + вектор смещения
-                    Vector3 moveVector = new Vector3(res.OffsetX, res.OffsetY, 0);
-                    clonedPoly.TransformBy(Matrix3.Identity, moveVector);
+                    foreach (var vertex in originalPoly.Vertexes)
+                    {
+                        double newX = vertex.Position.X + res.OffsetX;
+                        double newY = vertex.Position.Y + res.OffsetY;
+                        movedVertices.Add(new LwPolylineVertex(newX, newY));
+                    }
                     
-                    outDoc.Entities.Add(clonedPoly);
+                    var nestedPoly = new LwPolyline(movedVertices, originalPoly.IsClosed);
+                    outDoc.AddEntity(nestedPoly);
                 }
             }
 
