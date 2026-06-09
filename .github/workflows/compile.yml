@@ -1,24 +1,45 @@
 name: Build Nesting App
-on: [push, workflow_dispatch]
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup MSVC (C++)
-      uses: ilammy/msvc-dev-cmd@v1
-    - name: Compile C++ DLL
-      run: cl.exe /LD NestingCore.cpp /Fe:NestingEngine.dll
-    - name: Setup .NET (C#)
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-    - name: Build Application
+
+    - name: Developer Command Prompt for VS
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Build C++ DLL
+      run: cl.exe /LD NestingCore.cpp /Fe:NestingEngine.dll
+
+    - name: Restore C# dependencies
+      run: dotnet restore NestingApp.csproj
+
+    - name: Build C# Project (Release)
+      run: dotnet build NestingApp.csproj -c Release --no-restore
+
+    - name: Move DLL to Output Folder
       run: |
-        dotnet restore
-        dotnet build -c Release
-    - name: Inject DLL
-      - name: Upload Finished App
+        New-Item -ItemType Directory -Force -Path bin\Release\net8.0
+        Copy-Item -Path NestingEngine.dll -Destination bin\Release\net8.0\
+
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: MyNestingProgram
