@@ -1,0 +1,26 @@
+name: Build Nesting App
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup MSVC (C++)
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Compile C++ DLL
+      run: cl.exe /LD NestingCore.cpp /Fe:NestingEngine.dll
+    - name: Setup .NET (C#)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    - name: Build Application
+      run: |
+        dotnet restore
+        dotnet build -c Release
+    - name: Inject DLL
+      run: copy NestingEngine.dll bin\Release\net8.0\
+    - name: Upload Finished App
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyNestingProgram
+        path: bin/Release/net8.0/
